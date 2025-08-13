@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>MAD | روابط سريعة بالصور</title>
+  <style>
+    :root{--gap:14px;--ring:#e5e5e5;--sticky-h:78px}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    html{scroll-padding-bottom:calc(var(--sticky-h) + 24px)}
+    body{
+      margin:0; background:#f7f7f7;
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Kufi Arabic","Noto Sans Arabic",Tahoma,Arial,sans-serif;
+      padding-bottom:calc(var(--sticky-h) + env(safe-area-inset-bottom,0px));
+    }
+    .wrap{max-width:720px;margin:0 auto;padding:16px}
+    .gallery{display:flex;flex-direction:column;gap:var(--gap)}
+    a.tile{
+      display:block; border:1px solid var(--ring); border-radius:0; /* حواف مربعة */
+      background:#fff; box-shadow:0 4px 14px rgba(0,0,0,.05);
+      transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      text-align:center; /* لمركز الصورة لو كانت أضيق من الحاوية */
+      padding:0; /* لا نضيف حشوة حتى تبقى الصورة بحجمها */
+    }
+    a.tile:hover{box-shadow:0 10px 26px rgba(0,0,0,.09);border-color:#d4d4d4}
+    a.tile:active{transform:scale(.99) translateY(1px)}
+    .tile img{
+      display:block;
+      max-width:100%;   /* لا تتجاوز عرض الحاوية */
+      height:auto;      /* تحافظ على الأبعاد الأصلية */
+      margin:0 auto;    /* توسيط عرضيًا عند الحاجة */
+      border-radius:0;  /* حواف الصورة مربعة */
+    }
+
+    /* بوكس العروض (ثابت) */
+    .sticky{
+      position:fixed; inset-inline:0; bottom:0; height:var(--sticky-h);
+      padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));
+      background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.92) 10%, #fff 40%);
+      display:flex; justify-content:center; align-items:flex-end; pointer-events:none; z-index:50;
+    }
+    .sticky .box{
+      pointer-events:auto; max-width:720px; width:calc(100% - 24px);
+      display:flex; align-items:center; gap:10px;
+      background:#fff; border:1px solid var(--ring); border-radius:12px;
+      padding:10px 12px; box-shadow:0 6px 24px rgba(0,0,0,.08); text-decoration:none; color:#000;
+    }
+    .sticky .box img{
+      max-height:36px; width:auto; height:auto; object-fit:contain; border-radius:0; /* مصغّرة بدون قصّ */
+    }
+
+    /* فاصل أسفل المحتوى كي لا يغطيه الزر */
+    .sentinel{height:calc(var(--sticky-h) + 24px)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav id="gallery" class="gallery" aria-label="روابط مصوّرة فقط"></nav>
+    <div class="sentinel" aria-hidden="true"></div>
+  </div>
+
+  <!-- بوكس العروض والحملات (ثابت) -->
+  <div class="sticky" role="complementary" aria-label="العروض والحملات">
+    <a id="offersBox" class="box" href="#" target="_self" rel="noopener">
+      <img id="offersImg" alt="">
+    </a>
+  </div>
+
+  <script>
+    /* ======= الإعدادات ======= */
+    const OPEN_IN_NEW_TAB = false;      // true لفتح الروابط في تبويب جديد
+    const BASES = ["", "photo/"];       // الجذر ثم photo/ كخيار احتياطي
+
+    // القائمة: صورة ↔ رابط (HTTP). الصور بأسمائها كما رفعتها (1.png .. 7.png)
+    const FILES = [
+      { file: "1.png", href: "https://madperfume.ps/?app=product.cat.1" },
+      { file: "2.png", href: "https://madperfume.ps/?app=product.cat.1" },
+      { file: "3.png", href: "https://madperfume.ps/?app=product.cat.2" },
+      { file: "4.png", href: "https://madperfume.ps/?app=product.cat.3" },
+      { file: "5.png", href: "https://madperfume.ps/?app=product.cat.12" },
+      { file: "6.png", href: "https://madperfume.ps/?app=product.cat.5" },
+      { file: "7.png", href: "https://madperfume.ps/?app=product.cat.4" },
+      // أضف المزيد هكذا: { file: "9.png", href: "https://madperfume.ps/?app=..." },
+    ];
+
+    // إعداد بوكس العروض
+    const OFFERS_FILE = "8.png";
+    const OFFERS_LINK = "https://madperfume.ps/?app=product.cat.6";
+
+    /* ======= وظائف مساعدة ======= */
+    function applySrcWithFallback(imgEl, file){
+      let i = 0;
+      const tryNext = () => { if(i < BASES.length) imgEl.src = BASES[i] + file; };
+      imgEl.onerror = () => { i++; tryNext(); };
+      tryNext();
+    }
+
+    function fixSpacer(){
+      const sticky = document.querySelector('.sticky');
+      const sp = document.querySelector('.sentinel');
+      if(!sticky || !sp) return;
+      const h = sticky.offsetHeight + 16;
+      sp.style.height = h + 'px';
+    }
+
+    // توليد القائمة (صور فقط، دون نص)
+    const g = document.getElementById("gallery");
+    FILES.forEach(item => {
+      const a = document.createElement("a");
+      a.className = "tile";
+      a.href = item.href || "#";
+      a.target = OPEN_IN_NEW_TAB ? "_blank" : "_self";
+      a.rel = "noopener";
+
+      const img = document.createElement("img");
+      img.loading = "lazy"; img.decoding = "async"; img.alt = "";
+      applySrcWithFallback(img, item.file);
+
+      a.appendChild(img);
+      g.appendChild(a);
+    });
+
+    // بوكس العروض
+    const offers = document.getElementById("offersBox");
+    offers.href = OFFERS_LINK || "#";
+    offers.target = OPEN_IN_NEW_TAB ? "_blank" : "_self";
+    applySrcWithFallback(document.getElementById("offersImg"), OFFERS_FILE);
+
+    // إصلاح الفاصل حسب ارتفاع البوكس على الهاتف
+    window.addEventListener('load', fixSpacer);
+    window.addEventListener('resize', fixSpacer);
+    window.addEventListener('orientationchange', fixSpacer);
+  </script>
+</body>
+</html>
